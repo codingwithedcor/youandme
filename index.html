@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<!--
+  ============================================================
+  HOW TO EDIT YOUR STORY (Ctrl+F / Cmd+F to jump to a spot):
+   - Search for any paragraph text below and edit it directly.
+  Leave the rest of the design/animation code alone unless you
+  want to risk breaking the flip effect. Enjoy, and good luck
+  with your story! 💛
+  ============================================================
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Us: The Beginning</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,600&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Caveat:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy-deep:#12101c;
+    --navy-mid:#1d1930;
+    --navy-glow: rgba(201,161,90,0.10);
+    --parchment:#f4ead1;
+    --parchment-2:#ecdcb6;
+    --parchment-shadow:#d8c295;
+    --ink:#3c2b1c;
+    --ink-soft:#5a4632;
+    --gold:#c9a15a;
+    --gold-bright:#e4c584;
+    --rose:#b8637a;
+    --rose-deep:#8a4256;
+    --leather:#3a1620;
+    --leather-dark:#220b12;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0; padding:0; height:100%;
+    background:
+      radial-gradient(ellipse at 30% 20%, var(--navy-glow), transparent 55%),
+      radial-gradient(ellipse at 70% 80%, rgba(184,99,122,0.08), transparent 55%),
+      linear-gradient(180deg, var(--navy-deep), var(--navy-mid));
+    font-family:'Cormorant Garamond', serif;
+    color:var(--parchment);
+    overflow:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  /* ---------- ambient floating embers ---------- */
+  .ambience{
+    position:fixed; inset:0; pointer-events:none; z-index:0; overflow:hidden;
+  }
+  .ember{
+    position:absolute;
+    bottom:-20px;
+    width:5px; height:5px;
+    border-radius:50%;
+    background:radial-gradient(circle, var(--gold-bright), transparent 70%);
+    opacity:0.7;
+    animation:rise linear infinite;
+  }
+  @keyframes rise{
+    0%{ transform:translateY(0) translateX(0); opacity:0; }
+    10%{ opacity:0.8; }
+    90%{ opacity:0.4; }
+    100%{ transform:translateY(-105vh) translateX(var(--drift,20px)); opacity:0; }
+  }
+
+  /* subtle hints showing where to tap to turn the page */
+  .edge-hint{
+    position:absolute; top:50%; transform:translateY(-50%);
+    color:var(--gold-bright); font-size:1.4rem; opacity:0;
+    transition:opacity 0.3s ease; pointer-events:none; z-index:8;
+    text-shadow:0 2px 6px rgba(0,0,0,0.7);
+  }
+  .edge-hint.left{ left:16px; }
+  .edge-hint.right{ right:8px; }
+  @media (hover:hover){
+    .book-wrap:hover .edge-hint{ opacity:0.5; }
+  }
+
+  /* ---------- stage ---------- */
+  .stage{
+    position:relative; z-index:1;
+    height:100%;
+    display:flex; flex-direction:column;
+    align-items:center; justify-content:center;
+    gap:22px;
+    padding:24px 14px;
+  }
+
+  .eyebrow{
+    font-family:'Caveat', cursive;
+    font-size:1.4rem;
+    color:var(--gold-bright);
+    letter-spacing:0.5px;
+    opacity:0.85;
+  }
+
+  /* ---------- the book ---------- */
+  .book-wrap{
+    perspective:2000px;
+    width:min(92vw, 640px);
+    aspect-ratio:3/4;
+    position:relative;
+    filter:drop-shadow(0 35px 45px rgba(0,0,0,0.5));
+  }
+
+  /* stacked page edges peeking out on the right, to sell "this is a thick book" */
+  .book-wrap::before{
+    content:"";
+    position:absolute;
+    top:3%; bottom:3%; right:-7px;
+    width:14px;
+    background:
+      repeating-linear-gradient(180deg,
+        #ece0c4 0px, #ece0c4 2px,
+        #dccb9e 2px, #dccb9e 3px);
+    border-radius:0 6px 6px 0;
+    box-shadow:2px 0 6px rgba(0,0,0,0.35);
+    z-index:0;
+  }
+
+  .book{
+    position:relative;
+    width:100%; height:100%;
+    border-radius:6px 10px 10px 6px;
+    box-shadow:
+      0 30px 60px rgba(0,0,0,0.55),
+      0 0 0 1px rgba(212,175,106,0.15),
+      0 0 0 5px var(--leather-dark);
+    background:var(--leather);
+    z-index:1;
+  }
+
+  /* thin gold foil line just inside the leather edge */
+  .book::after{
+    content:"";
+    position:absolute; inset:4px;
+    border:1px solid rgba(212,175,106,0.35);
+    border-radius:4px 8px 8px 4px;
+    pointer-events:none; z-index:6;
+  }
+
+  /* spine shadow to sell the "bound book" feel */
+  .book::before{
+    content:"";
+    position:absolute; left:0; top:0; bottom:0; width:38px;
+    background:linear-gradient(90deg, rgba(0,0,0,0.6), transparent);
+    z-index:5; border-radius:6px 0 0 6px;
+    pointer-events:none;
+  }
+
+  /* hanging ribbon bookmark */
+  .ribbon{
+    position:absolute; top:-4px; right:15%;
+    width:22px; height:64px;
+    background:linear-gradient(180deg, var(--rose), var(--rose-deep));
+    clip-path:polygon(0 0, 100% 0, 100% 100%, 50% 78%, 0 100%);
+    z-index:7;
+    box-shadow:0 4px 8px rgba(0,0,0,0.3);
+    pointer-events:none;
+  }
+
+  .page{
+    position:absolute; inset:0;
+    border-radius:4px 8px 8px 4px;
+    overflow:hidden;
+    transform-style:preserve-3d;
+    transform-origin:left center;
+    backface-visibility:hidden;
+    transition:transform 0.9s cubic-bezier(.45,.05,.15,1), opacity 0.4s ease, filter 0.9s ease;
+  }
+
+  .page[data-state="turning-out"],
+  .page[data-state="turning-in"]{
+    filter:brightness(0.7) saturate(0.85);
+  }
+
+  .page-inner{
+    position:absolute; inset:0;
+    display:flex; flex-direction:column;
+    padding:clamp(22px, 5vw, 46px) clamp(24px, 6vw, 50px);
+    background:
+      radial-gradient(circle at 90% 8%, rgba(255,255,255,0.35), transparent 40%),
+      linear-gradient(135deg, var(--parchment), var(--parchment-2) 85%);
+    box-shadow: inset 0 0 40px rgba(90,60,20,0.18);
+  }
+
+  /* sweeping shadow that crosses the page as it turns, like light catching an edge */
+  .page-inner::before{
+    content:"";
+    position:absolute; inset:0;
+    background:linear-gradient(90deg, rgba(20,10,5,0.4), transparent 35%, transparent 65%, rgba(20,10,5,0.4));
+    opacity:0;
+    transition:opacity 0.9s ease;
+    pointer-events:none;
+    z-index:3;
+  }
+  .page[data-state="turning-out"] .page-inner::before,
+  .page[data-state="turning-in"] .page-inner::before{
+    opacity:1;
+  }
+
+  /* paper grain */
+  .page-inner::after{
+    content:""; position:absolute; inset:0; opacity:0.5; mix-blend-mode:multiply;
+    background-image:
+      repeating-linear-gradient(0deg, rgba(120,90,50,0.03) 0px, transparent 2px, transparent 4px),
+      repeating-linear-gradient(90deg, rgba(120,90,50,0.02) 0px, transparent 3px, transparent 6px);
+    pointer-events:none;
+  }
+
+  .page[data-state="current"]{ transform:rotateY(0deg); z-index:3; }
+  .page[data-state="stacked"]{ transform:rotateY(0deg); z-index:1; opacity:0; }
+  .page[data-state="turning-out"]{ transform:rotateY(-150deg); z-index:4; }
+  .page[data-state="turning-in"]{ transform:rotateY(150deg); z-index:4; }
+  .page[data-state="back"]{ transform:rotateY(0deg); z-index:2; opacity:0; }
+
+  /* page corner curl hint */
+  .corner{
+    position:absolute; right:0; bottom:0; width:46px; height:46px;
+    background:linear-gradient(135deg, transparent 50%, rgba(90,60,20,0.18) 51%, rgba(90,60,20,0.05) 100%);
+    border-radius:0 0 4px 0;
+    pointer-events:none;
+  }
+
+  /* ---------- cover styling ---------- */
+  .cover .page-inner{
+    background:
+      radial-gradient(ellipse at 50% 0%, rgba(228,197,132,0.18), transparent 60%),
+      linear-gradient(160deg, var(--leather), var(--leather-dark) 80%);
+    align-items:center; justify-content:center; text-align:center;
+    color:var(--gold-bright);
+    gap:18px;
+  }
+  .cover .frame{
+    border:1.5px solid rgba(212,175,106,0.55);
+    padding:clamp(24px,6vw,42px) clamp(18px,5vw,30px);
+    border-radius:4px;
+    position:relative;
+  }
+  .cover .frame::before, .cover .frame::after{
+    content:"❦";
+    display:block;
+    font-size:1.1rem;
+    color:var(--gold);
+    margin:0 auto 12px;
+  }
+  .cover .frame::after{ margin:12px auto 0; }
+  /* gilded corner flourishes */
+  .corner-mark{
+    position:absolute; width:26px; height:26px;
+    border:1.5px solid var(--gold);
+    opacity:0.8;
+  }
+  .corner-mark.tl{ top:-1px; left:-1px; border-right:none; border-bottom:none; }
+  .corner-mark.tr{ top:-1px; right:-1px; border-left:none; border-bottom:none; }
+  .corner-mark.bl{ bottom:-1px; left:-1px; border-right:none; border-top:none; }
+  .corner-mark.br{ bottom:-1px; right:-1px; border-left:none; border-top:none; }
+  .cover h1{
+    font-family:'Playfair Display', serif;
+    font-style:italic;
+    font-weight:700;
+    font-size:clamp(2rem, 7vw, 2.9rem);
+    margin:0 0 8px;
+    letter-spacing:0.5px;
+    background:linear-gradient(100deg, var(--gold) 20%, #fff2cf 45%, var(--gold) 60%, var(--gold-bright) 80%);
+    background-size:220% auto;
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+    animation:shimmer 5s ease-in-out infinite;
+  }
+  @keyframes shimmer{
+    0%{ background-position:0% center; }
+    50%{ background-position:100% center; }
+    100%{ background-position:0% center; }
+  }
+  .cover p.sub{
+    font-size:clamp(1rem, 3vw, 1.2rem);
+    color:var(--parchment-2);
+    margin:0;
+  }
+  .cover .authors{
+    margin-top:16px;
+    font-family:'Caveat', cursive;
+    font-size:1.4rem;
+    color:var(--gold-bright);
+  }
+  .open-hint{
+    margin-top:22px;
+    font-size:0.95rem;
+    color:var(--parchment-shadow);
+    letter-spacing:1px;
+    text-transform:uppercase;
+    opacity:0.75;
+  }
+
+  /* ---------- chapter page styling ---------- */
+  .chapter-label{
+    font-family:'Caveat', cursive;
+    font-size:1.3rem;
+    color:var(--rose-deep);
+    margin:0 0 2px;
+  }
+  .chapter-title{
+    font-family:'Playfair Display', serif;
+    font-weight:700;
+    font-size:clamp(1.5rem, 5vw, 2.1rem);
+    color:var(--ink);
+    margin:0 0 14px;
+    border-bottom:2px solid var(--gold);
+    padding-bottom:10px;
+  }
+  .chapter-body{
+    font-size:clamp(1.02rem, 2.6vw, 1.22rem);
+    line-height:1.65;
+    color:var(--ink-soft);
+    overflow-y:auto;
+    flex:1;
+    padding-right:4px;
+  }
+  .chapter-body p{ margin:0 0 1em; }
+  .chapter-body::-webkit-scrollbar{ width:5px; }
+  .chapter-body::-webkit-scrollbar-thumb{ background:var(--gold); border-radius:4px; }
+
+  .drop{
+    float:left;
+    font-family:'Playfair Display', serif;
+    font-size:2.6em;
+    line-height:0.8;
+    padding:0.08em 0.09em 0 0;
+    color:var(--rose-deep);
+    font-weight:700;
+  }
+
+  .note{
+    font-family:'Caveat', cursive;
+    font-size:1.15rem;
+    color:var(--rose-deep);
+    margin-top:10px;
+    transform:rotate(-1.5deg);
+    display:inline-block;
+    opacity:0.9;
+  }
+
+  .page-number{
+    position:absolute; bottom:14px; right:20px;
+    font-family:'Cormorant Garamond', serif;
+    font-style:italic;
+    color:var(--ink-soft);
+    opacity:0.55;
+    font-size:0.9rem;
+  }
+
+  /* ---------- closing page ---------- */
+  .closing .page-inner{
+    align-items:center; justify-content:center; text-align:center;
+    background:
+      radial-gradient(ellipse at 50% 30%, rgba(184,99,122,0.10), transparent 60%),
+      linear-gradient(135deg, var(--parchment), var(--parchment-2) 85%);
+  }
+  .closing h2{
+    font-family:'Playfair Display', serif;
+    font-style:italic;
+    font-size:clamp(1.6rem, 6vw, 2.3rem);
+    color:var(--ink);
+    margin:0 0 10px;
+  }
+  .closing p{ color:var(--ink-soft); font-size:1.1rem; max-width:38ch; }
+  .seal{
+    width:66px; height:66px; border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, var(--rose), var(--rose-deep));
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:0 6px 14px rgba(0,0,0,0.25);
+    margin-bottom:18px;
+    font-size:1.5rem;
+  }
+  .dots-pending{
+    display:flex; gap:6px; margin-top:16px;
+  }
+  .dots-pending span{
+    width:6px; height:6px; border-radius:50%; background:var(--gold);
+    opacity:0.4; animation:pulse 1.6s ease-in-out infinite;
+  }
+  .dots-pending span:nth-child(2){ animation-delay:0.2s; }
+  .dots-pending span:nth-child(3){ animation-delay:0.4s; }
+  @keyframes pulse{ 0%,100%{opacity:0.25; transform:scale(1);} 50%{opacity:0.9; transform:scale(1.25);} }
+
+  /* ---------- controls ---------- */
+  .controls{
+    display:flex; align-items:center; gap:18px;
+    z-index:2;
+  }
+  .nav-btn{
+    width:46px; height:46px; border-radius:50%;
+    border:1px solid rgba(212,175,106,0.4);
+    background:rgba(255,255,255,0.03);
+    color:var(--gold-bright);
+    font-size:1.3rem;
+    cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    transition:background 0.25s, transform 0.2s, box-shadow 0.25s, border-color 0.25s;
+  }
+  .nav-btn:hover:not(:disabled){
+    background:rgba(212,175,106,0.15);
+    border-color:var(--gold-bright);
+    transform:translateY(-2px);
+    box-shadow:0 6px 18px rgba(201,161,90,0.25);
+  }
+  .nav-btn:active:not(:disabled){ transform:translateY(0) scale(0.95); }
+  .nav-btn:disabled{ opacity:0.25; cursor:default; }
+  .nav-btn:focus-visible{ outline:2px solid var(--gold-bright); outline-offset:2px; }
+
+  .dots{ display:flex; gap:8px; }
+  .dot{
+    width:8px; height:8px; border-radius:50%;
+    background:rgba(212,175,106,0.3);
+    transition:background 0.3s, transform 0.3s, box-shadow 0.3s;
+  }
+  .dot.active{
+    background:var(--gold-bright);
+    transform:scale(1.3);
+    box-shadow:0 0 8px rgba(228,197,132,0.7);
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .page{ transition:opacity 0.3s ease !important; filter:none !important; }
+    .page[data-state="turning-out"]{ transform:none; opacity:0; }
+    .page[data-state="turning-in"]{ transform:none; }
+    .page-inner::before{ display:none; }
+    .ember{ animation:none; display:none; }
+    .cover h1{ animation:none; }
+  }
+
+  @media (max-width:480px){
+    .book-wrap{ width:94vw; }
+    .controls{ gap:12px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="ambience" id="ambience"></div>
+
+<div class="stage">
+  <div class="eyebrow">a story still being written...</div>
+
+  <div class="book-wrap">
+    <span class="edge-hint left">‹</span>
+    <span class="edge-hint right">›</span>
+    <div class="book" id="book">
+      <div class="ribbon"></div>
+
+      <!-- COVER -->
+      <div class="page cover" data-state="current" data-index="0">
+        <div class="page-inner">
+          <span class="corner-mark tl"></span>
+          <span class="corner-mark tr"></span>
+          <span class="corner-mark bl"></span>
+          <span class="corner-mark br"></span>
+          <div class="frame">
+            <h1>Us</h1>
+            <p class="sub">The Beginning</p>
+            <div class="authors">me &amp; Allyn</div>
+          </div>
+          <div class="open-hint">open the book →</div>
+        </div>
+      </div>
+
+      <!-- CHAPTER 1: THE MEETING -->
+      <div class="page" data-state="stacked" data-index="1">
+        <div class="page-inner">
+          <div class="chapter-label">Chapter One</div>
+          <h2 class="chapter-title">The Meeting</h2>
+          <div class="chapter-body">
+            <p><span class="drop">I</span> never imagined that a single TikTok live would be where it all began. It wasn't just the two of us, our whole barkada was there, hopping on lives together. At first, her camera was off. Then she turned it on, and that's the moment it hit me. It was love at first sight, on a live, of all places.</p>
+            <p>From then on, we were on TikTok live together almost every single day. It started as simple small talk, but day by day, what I felt for her kept growing bigger. She was in Cagayan back then, far away, but somehow it always felt close whenever we talked.</p>
+            <p>So we planned a hangout, a laag, in Bawbawon. She was in Cagayan at the time, but she said she'd come all the way home just so she could join us. And she did.</p>
+            <p class="note">"who knew a live stream could feel like fate."</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- CHAPTER 2: THE PURSUIT -->
+      <div class="page" data-state="stacked" data-index="2">
+        <div class="page-inner">
+          <div class="chapter-label">Chapter Two</div>
+          <h2 class="chapter-title">The Pursuit</h2>
+          <div class="chapter-body">
+            <p><span class="drop">W</span>e waited for her at the terminal. When she arrived and I saw her in person for the first time, she was so beautiful, but I couldn't say it, I didn't want to embarrass myself. We went to Bawbawon, we had fun, and the whole time, she was the only one I was looking at, even though I still wasn't showing what I really felt.</p>
+            <p>The next day, she invited us to a birthday party. When we got there, I saw her in a dress, "oh my god, she is so beautiful." We hung out as a barkada all night, drinks and karaoke, until we finally went home.</p>
+            <p>That night, I realized my charger was missing, turns out she'd borrowed it to charge the mic for karaoke. The next morning, I messaged her to remind her, and that turned out to be our first ever personal chat, since we usually only talked in our "Le is Che" group chat. I call her "Master" out of respect, since she'd already finished her master's degree.</p>
+            <p>But she was heading back to Cagayan for work that same day. So I waited for her at the terminal again, to get my charger back, but really, to see her one more time too. She was as beautiful as ever. We only had a few minutes together because it was raining, and even though I wanted to tell her the truth before she left, I still couldn't find the courage. So I just said, "the rain's stopped, I should head home," and left first. A little while later, she got on the bus back to Cagayan.</p>
+            <p>That night, over chat, that's where I finally told her the truth. Not directly, but I told her that there was someone in our barkada I was in love with. She was curious who it was, until I told her it was her. I asked her: "If I pursue you, would you accept me?" And she answered, <em>"if you're willing to wait."</em></p>
+            <p class="note">she gave me a chance. that was all I needed.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- CHAPTER 3: GETTING TO KNOW EACH OTHER -->
+      <div class="page" data-state="stacked" data-index="3">
+        <div class="page-inner">
+          <div class="chapter-label">Chapter Three</div>
+          <h2 class="chapter-title">Getting to Know Each Other</h2>
+          <div class="chapter-body">
+            <p><span class="drop">T</span>o this day, I'm still pursuing Allyn. "If you're willing to wait," that's what she said, and I'm waiting with my whole heart. She's busy with work, sometimes it takes a while before she replies, but no matter how long it takes, I still get excited every time a new message comes in.</p>
+            <p>She'll be turning 26 this year, and I'll be turning 23, a three year gap between us. But even with that, she still gave me a chance to pursue her, and I don't take that for granted.</p>
+            <p>This is where we are now, slowly still getting to know each other, in the middle of distance and busy schedules, but I keep loving her and keep waiting, because she's the one I want to reach.</p>
+            <p>Even the way I say her name has changed along the way, from Allyn, to Llyn, then Ayen, and now, "Do." Small changes, but each one feels like we're getting a little closer.</p>
+            <p class="note">slowly, but truly. our story is still being written.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- CLOSING / TO BE CONTINUED -->
+      <div class="page closing" data-state="stacked" data-index="4">
+        <div class="page-inner">
+          <div class="seal">💛</div>
+          <h2>To Be Continued...</h2>
+          <p>Allyn and I are still writing the next chapter. The one thing I know, I want her with me on every page that comes after this.</p>
+          <div class="dots-pending"><span></span><span></span><span></span></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="controls">
+    <button class="nav-btn" id="prevBtn" aria-label="Previous page">‹</button>
+    <div class="dots" id="dots"></div>
+    <button class="nav-btn" id="nextBtn" aria-label="Next page">›</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  const book = document.getElementById('book');
+  const pages = Array.from(book.querySelectorAll('.page'));
+  const total = pages.length;
+  let current = 0;
+  let animating = false;
+
+  const dotsWrap = document.getElementById('dots');
+  pages.forEach((_, i) => {
+    const d = document.createElement('div');
+    d.className = 'dot' + (i === 0 ? ' active' : '');
+    dotsWrap.appendChild(d);
+  });
+  const dotEls = Array.from(dotsWrap.children);
+
+  const prevBtn = document.getElementById('prevBtn');
+  const nextBtn = document.getElementById('nextBtn');
+
+  function updateButtons(){
+    prevBtn.disabled = current === 0;
+    nextBtn.disabled = current === total - 1;
+  }
+
+  function setStates(){
+    pages.forEach((p, i) => {
+      if (i === current) p.dataset.state = 'current';
+      else if (i < current) p.dataset.state = 'back';
+      else p.dataset.state = 'stacked';
+    });
+    dotEls.forEach((d,i) => d.classList.toggle('active', i === current));
+    updateButtons();
+  }
+
+  function goNext(){
+    if (animating || current >= total - 1) return;
+    animating = true;
+    const leaving = pages[current];
+    const entering = pages[current + 1];
+    entering.dataset.state = 'turning-in';
+    entering.style.opacity = '1';
+    // force reflow so transition triggers
+    void entering.offsetWidth;
+    leaving.dataset.state = 'turning-out';
+    entering.dataset.state = 'current';
+    current += 1;
+    dotEls.forEach((d,i) => d.classList.toggle('active', i === current));
+    updateButtons();
+    setTimeout(() => { setStates(); animating = false; }, 920);
+  }
+
+  function goPrev(){
+    if (animating || current <= 0) return;
+    animating = true;
+    const leaving = pages[current];
+    const entering = pages[current - 1];
+    entering.dataset.state = 'turning-out';
+    entering.style.opacity = '1';
+    void entering.offsetWidth;
+    leaving.dataset.state = 'turning-in';
+    entering.dataset.state = 'current';
+    current -= 1;
+    dotEls.forEach((d,i) => d.classList.toggle('active', i === current));
+    updateButtons();
+    setTimeout(() => { setStates(); animating = false; }, 920);
+  }
+
+  nextBtn.addEventListener('click', goNext);
+  prevBtn.addEventListener('click', goPrev);
+
+  // click near the left/right edge of the book to turn pages, like a real book
+  // (reading text or dots in the middle no longer accidentally flips a page)
+  book.addEventListener('click', (e) => {
+    if (e.target.closest('.chapter-body') || e.target.closest('.frame')) return;
+    const rect = book.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    if (x > rect.width * 0.82) goNext();
+    else if (x < rect.width * 0.18) goPrev();
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight') goNext();
+    if (e.key === 'ArrowLeft') goPrev();
+  });
+
+  // touch swipe (needs a deliberate swipe, not a light brush)
+  let touchStartX = null, touchStartY = null;
+  book.addEventListener('touchstart', (e) => {
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+  }, {passive:true});
+  book.addEventListener('touchend', (e) => {
+    if (touchStartX === null) return;
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    const dy = e.changedTouches[0].clientY - touchStartY;
+    if (Math.abs(dx) > 90 && Math.abs(dx) > Math.abs(dy) * 1.5) { dx < 0 ? goNext() : goPrev(); }
+    touchStartX = null; touchStartY = null;
+  }, {passive:true});
+
+  updateButtons();
+
+  // ambient embers
+  const ambience = document.getElementById('ambience');
+  for (let i = 0; i < 18; i++){
+    const em = document.createElement('div');
+    em.className = 'ember';
+    em.style.left = Math.random() * 100 + 'vw';
+    em.style.setProperty('--drift', (Math.random() * 60 - 30) + 'px');
+    em.style.animationDuration = (7 + Math.random() * 8) + 's';
+    em.style.animationDelay = (Math.random() * 10) + 's';
+    em.style.width = em.style.height = (2 + Math.random()*3) + 'px';
+    ambience.appendChild(em);
+  }
+})();
+</script>
+
+</body>
+</html>
