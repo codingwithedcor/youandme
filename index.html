@@ -468,7 +468,7 @@
   taps/clicks somewhere first — this page starts the song on the first
   tap anywhere, and there's also a speaker button top-right to mute it.)
 -->
-<audio id="bgMusic" src="song.mp3" loop preload="auto"></audio>
+<audio id="bgMusic" src="song.mp3" loop autoplay muted preload="auto"></audio>
 <button class="music-toggle" id="musicToggle" aria-label="Toggle music">🔇</button>
 
 <div class="stage">
@@ -662,48 +662,39 @@
 
   updateButtons();
 
-  // background music: we try to autoplay it the instant the page opens.
-  // most browsers allow this quietly, but some strictly block ANY audio
-  // with sound until the visitor taps/clicks the page once, that's a
-  // browser security rule we can't override, so we also start it on the
-  // very first tap/click anywhere as a fallback. Either way, once it
-  // starts, the loop attribute keeps it playing forever, start to end,
-  // start to end, non-stop.
+  // background music.
+  // Browsers only allow audio to autoplay if it starts MUTED — that's a
+  // hard rule we can't bypass, not a bug. So: the song actually starts
+  // playing (silently) the instant the page loads, and unmutes itself
+  // automatically on the visitor's very first tap/click anywhere on the
+  // page. From then on, the speaker button is a pure mute / unmute toggle.
   const bgMusic = document.getElementById('bgMusic');
   const musicToggle = document.getElementById('musicToggle');
-  let musicStarted = false;
+  bgMusic.volume = 0.5;
+  bgMusic.muted = true;
 
-  function startMusicOnce(){
-    if (musicStarted) return;
-    bgMusic.volume = 0.5;
-    bgMusic.play().then(() => {
-      musicStarted = true;
-      musicToggle.textContent = '🔊';
-    }).catch(() => {
-      // blocked until a real user gesture happens; the click/touch
-      // listeners below will retry automatically
-      musicToggle.textContent = '🔇';
-    });
+  function updateIcon(){
+    musicToggle.textContent = (bgMusic.paused || bgMusic.muted) ? '🔇' : '🔊';
   }
 
-  // attempt immediately on load
-  startMusicOnce();
-  window.addEventListener('load', startMusicOnce);
+  bgMusic.play().catch(() => { /* will retry on first user gesture below */ });
+  updateIcon();
 
-  // fallback: first tap/click anywhere starts it if autoplay was blocked
-  document.addEventListener('click', startMusicOnce);
-  document.addEventListener('touchend', startMusicOnce);
+  function unmuteOnFirstInteraction(){
+    if (bgMusic.paused) bgMusic.play().catch(() => {});
+    bgMusic.muted = false;
+    updateIcon();
+    document.removeEventListener('click', unmuteOnFirstInteraction);
+    document.removeEventListener('touchend', unmuteOnFirstInteraction);
+  }
+  document.addEventListener('click', unmuteOnFirstInteraction);
+  document.addEventListener('touchend', unmuteOnFirstInteraction);
 
   musicToggle.addEventListener('click', (e) => {
     e.stopPropagation();
-    if (!musicStarted) { startMusicOnce(); return; }
-    if (bgMusic.paused) {
-      bgMusic.play();
-      musicToggle.textContent = '🔊';
-    } else {
-      bgMusic.pause();
-      musicToggle.textContent = '🔇';
-    }
+    if (bgMusic.paused) { bgMusic.play().catch(() => {}); }
+    bgMusic.muted = !bgMusic.muted;
+    updateIcon();
   });
 
   // ambient embers
