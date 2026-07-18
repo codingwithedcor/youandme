@@ -663,37 +663,34 @@
   updateButtons();
 
   // background music.
-  // Browsers only allow audio to autoplay if it starts MUTED — that's a
-  // hard rule we can't bypass, not a bug. So: the song actually starts
-  // playing (silently) the instant the page loads, and unmutes itself
-  // automatically on the visitor's very first tap/click anywhere on the
-  // page. From then on, the speaker button is a pure mute / unmute toggle.
+  // Browsers only allow audio to autoplay if it starts MUTED, so we let
+  // it start playing silently in the background right away. The speaker
+  // button is the single, direct control: tapping it both unmutes AND
+  // starts playback if needed, all inside that one real tap (browsers
+  // require sound to begin inside an actual user tap/click, not code
+  // running after the fact — this button click satisfies that).
   const bgMusic = document.getElementById('bgMusic');
   const musicToggle = document.getElementById('musicToggle');
   bgMusic.volume = 0.5;
-  bgMusic.muted = true;
 
   function updateIcon(){
     musicToggle.textContent = (bgMusic.paused || bgMusic.muted) ? '🔇' : '🔊';
   }
 
-  bgMusic.play().catch(() => { /* will retry on first user gesture below */ });
+  bgMusic.muted = true;
+  bgMusic.play().catch(() => {});
   updateIcon();
 
-  function unmuteOnFirstInteraction(){
-    if (bgMusic.paused) bgMusic.play().catch(() => {});
-    bgMusic.muted = false;
-    updateIcon();
-    document.removeEventListener('click', unmuteOnFirstInteraction);
-    document.removeEventListener('touchend', unmuteOnFirstInteraction);
-  }
-  document.addEventListener('click', unmuteOnFirstInteraction);
-  document.addEventListener('touchend', unmuteOnFirstInteraction);
+  bgMusic.addEventListener('error', () => {
+    console.warn('Music file did not load. Check that song.mp3 exists next to index.html (exact filename, lowercase).');
+  });
 
   musicToggle.addEventListener('click', (e) => {
     e.stopPropagation();
-    if (bgMusic.paused) { bgMusic.play().catch(() => {}); }
     bgMusic.muted = !bgMusic.muted;
+    if (!bgMusic.muted && bgMusic.paused) {
+      bgMusic.play().catch(() => {});
+    }
     updateIcon();
   });
 
