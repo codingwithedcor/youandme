@@ -79,6 +79,21 @@
     .book-wrap:hover .edge-hint{ opacity:0.5; }
   }
 
+  .music-toggle{
+    position:fixed; top:16px; right:16px; z-index:20;
+    width:42px; height:42px; border-radius:50%;
+    border:1px solid rgba(212,175,106,0.4);
+    background:rgba(20,16,28,0.55);
+    backdrop-filter:blur(4px);
+    color:var(--gold-bright);
+    font-size:1.1rem;
+    cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    transition:background 0.25s, transform 0.2s;
+  }
+  .music-toggle:hover{ background:rgba(212,175,106,0.18); transform:translateY(-2px); }
+  .music-toggle:focus-visible{ outline:2px solid var(--gold-bright); outline-offset:2px; }
+
   /* ---------- stage ---------- */
   .stage{
     position:relative; z-index:1;
@@ -444,6 +459,18 @@
 
 <div class="ambience" id="ambience"></div>
 
+<!--
+  BACKGROUND MUSIC:
+  Put an mp3 file named "song.mp3" in the SAME FOLDER as this html file,
+  then it will loop quietly in the background. Rename the file in the
+  src="" below if you want to use a different filename.
+  (Browsers won't let a page play sound automatically until the visitor
+  taps/clicks somewhere first — this page starts the song on the first
+  tap anywhere, and there's also a speaker button top-right to mute it.)
+-->
+<audio id="bgMusic" src="song.mp3" loop preload="auto"></audio>
+<button class="music-toggle" id="musicToggle" aria-label="Toggle music">🔇</button>
+
 <div class="stage">
   <div class="eyebrow">a story still being written...</div>
 
@@ -634,6 +661,50 @@
   }, {passive:true});
 
   updateButtons();
+
+  // background music: we try to autoplay it the instant the page opens.
+  // most browsers allow this quietly, but some strictly block ANY audio
+  // with sound until the visitor taps/clicks the page once, that's a
+  // browser security rule we can't override, so we also start it on the
+  // very first tap/click anywhere as a fallback. Either way, once it
+  // starts, the loop attribute keeps it playing forever, start to end,
+  // start to end, non-stop.
+  const bgMusic = document.getElementById('bgMusic');
+  const musicToggle = document.getElementById('musicToggle');
+  let musicStarted = false;
+
+  function startMusicOnce(){
+    if (musicStarted) return;
+    bgMusic.volume = 0.5;
+    bgMusic.play().then(() => {
+      musicStarted = true;
+      musicToggle.textContent = '🔊';
+    }).catch(() => {
+      // blocked until a real user gesture happens; the click/touch
+      // listeners below will retry automatically
+      musicToggle.textContent = '🔇';
+    });
+  }
+
+  // attempt immediately on load
+  startMusicOnce();
+  window.addEventListener('load', startMusicOnce);
+
+  // fallback: first tap/click anywhere starts it if autoplay was blocked
+  document.addEventListener('click', startMusicOnce);
+  document.addEventListener('touchend', startMusicOnce);
+
+  musicToggle.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (!musicStarted) { startMusicOnce(); return; }
+    if (bgMusic.paused) {
+      bgMusic.play();
+      musicToggle.textContent = '🔊';
+    } else {
+      bgMusic.pause();
+      musicToggle.textContent = '🔇';
+    }
+  });
 
   // ambient embers
   const ambience = document.getElementById('ambience');
